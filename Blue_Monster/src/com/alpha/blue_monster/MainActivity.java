@@ -1,5 +1,6 @@
 package com.alpha.blue_monster;
 
+import android.R.color;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -56,12 +57,6 @@ public class MainActivity extends Activity {
 		feedButton.setY(padding);
 		feedButton.setOnClickListener(feedButtonClickListener);
 		
-		/*Button patButton = new Button(this);
-		Drawable patImg = getResources().getDrawable(R.drawable.pat);
-		patButton.setBackground(patImg);
-		patButton.setLayoutParams(buttonLayoutParams);
-		patButton.setX(screenWidth-2*(feedImg.getMinimumWidth()+padding));
-		patButton.setY(padding);*/
 		
 		ourSurfaceView.setOnTouchListener(surfaceViewOnTouchListener);
 		Widgets.addView(feedButton);
@@ -106,6 +101,8 @@ public class MainActivity extends Activity {
 						if(((Float)temp.get("happiness")).floatValue() < ((Float)temp.get("maxhappiness")).floatValue()-healpt){
 							float currentvalue = ((Float)temp.get("happiness")).floatValue();
 							temp.set("happiness", new Float(currentvalue+healpt));
+						}else{
+							temp.set("happiness", ((Float)temp.get("maxhappiness")).floatValue());
 						}
 					}
 					break;
@@ -134,13 +131,6 @@ public class MainActivity extends Activity {
 		@Override
 		public void onClick(View view) {
 			ourSurfaceView.setfoodButtonPressed(true);
-			/*Monster temp = ourSurfaceView.getMonster();
-			int healpt = 30;
-			if(((Float)temp.get("hp")).floatValue() < ((Float)temp.get("maxhp")).floatValue()-healpt){
-				float currentvalue = ((Float)temp.get("hp")).floatValue();
-				temp.set("hp", new Float(currentvalue+healpt));
-			}
-			ourSurfaceView.setMonster(temp);*/
 		}
 	};
 	

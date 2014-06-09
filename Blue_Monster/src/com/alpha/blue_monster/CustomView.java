@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Paint.Style;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -54,13 +55,13 @@ public class CustomView extends SurfaceView implements Runnable{
 	private ImgHashtable imgHashTable = new ImgHashtable();
 	
 	private boolean eating = false;
-	private int initialEatCounter = 20;
+	private int initialEatCounter = 100;
 	private int eatCounter = initialEatCounter;
 	private boolean pat = false;
 	private boolean patRelease = false;
 	private boolean foodButtonPressed;
 	private int foodCount;
-	private int initialPatCounter = 30;
+	private int initialPatCounter = 150;
 	private int patCounter = initialPatCounter;
 	
 	public CustomView(Context context, Monster monster){
@@ -80,7 +81,7 @@ public class CustomView extends SurfaceView implements Runnable{
 		fblueMonsterEat = Bitmap.createBitmap(blueMonsterEat, 0, 0, blueMonsterEat.getWidth(), blueMonsterEat.getHeight(), mirrorMatrix, false);
 		ourHolder= getHolder();
 		x =0;
-		barLabelx = 0;
+		barLabelx = 10;
 		barLabely = padding;
 		barWidth = 5;
 		barMaxLength = 200;
@@ -88,15 +89,15 @@ public class CustomView extends SurfaceView implements Runnable{
 		foodButtonPressed = false;
 		startTimer = false;
 		paint = new Paint();
-		paint.setColor(Color.GREEN);
+		paint.setColor(Color.RED);
 		paint.setStyle(Paint.Style.FILL_AND_STROKE);
 		paint.setStrokeWidth(2);
 		txtPaint = new Paint();
-		txtPaint.setStyle(Paint.Style.STROKE);
+		txtPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 		txtPaint.setStrokeWidth(1);
 		txtPaint.setColor(Color.BLACK);
-		txtPaint.setTextSize(30);
-		barDropRate = 10;
+		txtPaint.setTextSize(40);
+		barDropRate = 300;
 		
 		foodCoordinates= new LinkedList<Point>();
 		
@@ -132,7 +133,9 @@ public class CustomView extends SurfaceView implements Runnable{
 			Canvas canvas = ourHolder.lockCanvas();
 			screenHeight = canvas.getHeight();
 			screenWidth = canvas.getWidth();
-			canvas.drawColor(Color.WHITE);
+			barMaxLength = (int)(screenWidth*0.45);
+			Color c = new Color();
+			canvas.drawColor(c.rgb(0xB2, 0xff, 0xff));
 			
 
 			
@@ -145,7 +148,7 @@ public class CustomView extends SurfaceView implements Runnable{
 			}else if(patRelease){
 				if(patCounter>0){
 					patCounter--;
-					if(Math.floor((double)(patCounter/5.0))%2 ==0){
+					if(Math.floor((double)(patCounter/25.0))%2 ==0){
 						canvas.drawBitmap(blueMonsterLaugh, x, canvas.getHeight()-blueMonsterLaugh.getHeight(), null);
 					} else{
 						canvas.drawBitmap(blueMonsterSmile, x, canvas.getHeight()-blueMonsterSmile.getHeight(), null);
@@ -157,10 +160,18 @@ public class CustomView extends SurfaceView implements Runnable{
 			}else if(eating){
 				if(eatCounter>0){
 					eatCounter--;
-					if(Math.floor((double)(eatCounter/5.0))%2 ==0){
-						canvas.drawBitmap(blueMonster, x, canvas.getHeight()-blueMonster.getHeight(), null);
-					} else{
-						canvas.drawBitmap(blueMonsterEat, x, canvas.getHeight()-blueMonsterEat.getHeight(), null);
+					if(!backwards){
+						if(Math.floor((double)(eatCounter/25.0))%2 ==0){
+							canvas.drawBitmap(blueMonster, x, canvas.getHeight()-blueMonster.getHeight(), null);
+						} else{
+							canvas.drawBitmap(blueMonsterEat, x, canvas.getHeight()-blueMonsterEat.getHeight(), null);
+						}
+					}else{
+						if(Math.floor((double)(eatCounter/25.0))%2 ==0){
+							canvas.drawBitmap(fblueMonster, x, canvas.getHeight()-fblueMonster.getHeight(), null);
+						} else{
+							canvas.drawBitmap(fblueMonsterEat, x, canvas.getHeight()-fblueMonsterEat.getHeight(), null);
+						}
 					}
 				}else{
 					eatCounter = initialEatCounter;
@@ -168,47 +179,61 @@ public class CustomView extends SurfaceView implements Runnable{
 					if(((Float)monster.get("hp")).floatValue() < ((Float)monster.get("maxhp")).floatValue()-healpt){
 						float currentvalue = ((Float)monster.get("hp")).floatValue();
 						monster.set("hp", new Float(currentvalue+healpt));
+					}else{
+						monster.set("hp", ((Float)monster.get("maxhp")).floatValue());
 					}
 					eating = false;
 				}
-				foodCount--;
 			}else{
 				if(x<canvas.getWidth()-blueMonster.getWidth()&& !backwards){
-					x=x+10;
+					x=x+2;
 				}else{
 					backwards = true;
 				}
 				if(x>0&& backwards){
 					img = fblueMonster;
-					x=x-10;
+					x=x-2;
 				}else{
 					backwards = false;
 				}
 				canvas.drawBitmap(img, x, canvas.getHeight()-img.getHeight(), null);
 			}
 			
-			Log.v("CustomView: ", new Integer(foodCount).toString());
-			if(foodCount>0){
+			//Log.v("CustomView: ", "foodCount: "+new Integer(foodCount).toString());
+			//Log.v("CustomView: ", "eatCounter: "+new Integer(eatCounter).toString());
+			//Log.v("CustomView: ", "List Length: "+new Integer(foodCoordinates.size()).toString());
+			Point curPoint;
+			int foodCurX = 0;
+			int foodCurY = 0;
+			for(int i = 0; i< foodCoordinates.size(); i++){
+				curPoint = foodCoordinates.get(i);
+				foodCurX = curPoint.x;
+				foodCurY = curPoint.y;
+				canvas.drawBitmap(porkImg, foodCurX, foodCurY, null);
+			}
+			if(foodCount>0 && eatCounter == initialEatCounter){
 				for(int i = 0; i< foodCount; i++){
-					Point curPoint = foodCoordinates.get(i);
-					int foodCurX = curPoint.x;
-					int foodCurY = curPoint.y;
-					canvas.drawBitmap(porkImg, foodCurX, foodCurY, null);
+					curPoint = foodCoordinates.get(i);
+					foodCurX = curPoint.x;
+					foodCurY = curPoint.y;
 					float temp =0;
 					if(!backwards){
-						temp = Math.abs(x - foodCurX);
+						temp = Math.abs(x - foodCurX + blueMonster.getWidth());
 					}else{
 						temp = Math.abs(foodCurX-x);
 					}
-					if( temp< 1){
+					if( temp< 50){
 						eating = true;
 						foodCoordinates.remove(i);
+						foodCount--;
+						i--;
 					}
+					//Log.v("customview:", new Float(Math.abs(x - foodCurX)).toString());
 				}
 			}
 			
-			drawBar(canvas, "hp", monster, barLabelx, barLabely, 120, 150, false, true);
-			drawBar(canvas, "happiness", monster, barLabelx, barLabely+30, 120, 210, false, true);
+			drawBar(canvas, "Health Point: ", "hp", monster, barLabelx, barLabely, 30, 150, false, true);
+			drawBar(canvas, "Happiness: ", "happiness", monster, barLabelx, barLabely+30, 30, 210, false, true);
 			if(foodButtonPressed){
 				if(foodCount< MAX_FOOD_NUM){
 					foodCoordinates.add(new Point((int)(Math.random()*screenWidth), (int)screenHeight-porkImg.getHeight()));
@@ -222,9 +247,13 @@ public class CustomView extends SurfaceView implements Runnable{
 		}
 	}
 	
-	private void drawBar (Canvas canvas, String barType, Monster monster, float barLabelx, float barLabely, float timeElapsedTxtX, float timeElapsedTxtY, boolean timeElapsedShow, boolean fractionShow){
+	private void drawBar (Canvas canvas, String str, String barType, Monster monster, float barLabelx, float barLabely, float timeElapsedTxtX, float timeElapsedTxtY, boolean timeElapsedShow, boolean fractionShow){
 		
-		canvas.drawBitmap(imgHashTable.get(barType), barLabelx, barLabely, null);		
+		Paint text = new Paint();
+		text.setColor(Color.BLACK);
+		text.setStyle(Style.FILL_AND_STROKE);
+		text.setTextSize(30);
+		
 		float barLength = 0;
 		barLength = (((Float)monster.get(barType)).floatValue() / ((Float)monster.get("max"+barType)).floatValue())*barMaxLength;
 		float barRight = barLabelx+imgHashTable.get(barType).getWidth()+smallPadding+barLength;
@@ -232,7 +261,13 @@ public class CustomView extends SurfaceView implements Runnable{
 		float barTop = barLabely+imgHashTable.get(barType).getHeight()/2;
 		float barBottom = barLabely+imgHashTable.get(barType).getHeight()/2 +barWidth;
 		
-		canvas.drawRect(barLeft, barTop, barRight, barBottom, paint);
+		if (barType =="hp"){
+			canvas.drawText("HP : ", barLabelx, barBottom, text);
+		} else if(barType == "happiness"){
+			canvas.drawText("HAPPINESS : ", barLabelx, barBottom, text);
+		}
+		
+		canvas.drawRect(barLeft, barTop-10, barRight, barBottom, paint);
 		
 		if(((Float)monster.get(barType)).floatValue()>0){
 			if(startTimer == false){
@@ -248,8 +283,13 @@ public class CustomView extends SurfaceView implements Runnable{
 		}
 		if(timeElapsedShow)
 			canvas.drawText(new Long(elapsedTime/1000000000).toString()+" sec", timeElapsedTxtX, timeElapsedTxtY, txtPaint);
+		int val1 = 0;
+		int val2 = 0;
 		if(fractionShow)
-			canvas.drawText("Health Point: "+ ((Float)monster.get(barType)).toString()+" / " + ((Float)monster.get("max"+barType)).toString(), timeElapsedTxtX, timeElapsedTxtY+30, txtPaint);
+			val1 = ((Float)monster.get(barType)).intValue();
+			val2 = ((Float)monster.get("max"+barType)).intValue();
+			canvas.drawText(str+ new Integer(val1).toString()+" / " + new Integer(val2).toString(), timeElapsedTxtX, timeElapsedTxtY+30, txtPaint);
+			//canvas.drawText(str+ ((Float)monster.get(barType)).intValue()+" / " + ((Float)monster.get("max"+barType)).toString(), timeElapsedTxtX, timeElapsedTxtY+30, txtPaint);
 	}
 	
 	public Monster getMonster(){
